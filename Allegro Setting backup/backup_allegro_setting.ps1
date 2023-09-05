@@ -1,7 +1,7 @@
 # user
 $user_id = [Environment]::UserName
 Write-Host "Hello $user_id"
-$w_dir = "\\tpint035\ECAD\footprint_building_aid_skill\Backup"
+$w_dir = "\\tpint035\ECAD"
 if (!(Test-Path -Path $w_dir)) {
     Write-Host "Can't connect to W:\, Please check your connection!" -ForegroundColor Red
     Write-Host "Press any key to continue..."
@@ -17,24 +17,27 @@ if (!(Test-Path -Path $dir)) {
     Exit
 }
 
-Import-Module "$w_dir\Modules\UtilityProgram.psm1"
+Import-Module "$w_dir\footprint_building_aid_skill\Backup\Modules\UtilityProgram.psm1"
 
 # backup destination
 $dest_home = "C:\Users\" + $user_id + "\Box\Backup_Allegro_setting\"
 $dest_dir = $dest_home + (Get-Date).ToString("yyyy-MM-dd_HHmmss")
+if (!(Test-Path -Path $dest_dir)) {
+    New-Item -ItemType directory -Path $dest_dir
+}
 
 # computer information
 $computer_info = Get-ComputerInfo
-$computer_info | Out-File -FilePath $dest_dir"\computer_info.txt"
+$computer_info | Out-File -FilePath "$dest_dir\computer_info.txt"
 
 $ip_config = ipconfig /all
-$ip_config | Out-File -FilePath $dest_dir"\ip_config.txt"
+$ip_config | Out-File -FilePath "$dest_dir\ip_config.txt"
 
 $allegro_home = (Get-ChildItem -Path Env:\HOME).Value + "\"
 
 # PCBENV / ENV / SCRIPT / VIEW / allegro.ilinit(user)
 $pcbenv_dir = $allegro_home + "pcbenv\"
-Backup-Item -path $pcbenv_dir -dest $dest_dir
+Copy-Files -path $pcbenv_dir -dest $dest_dir
 
 # versions
 $version_array = 'SPB_16.6', 'SPB_17.2', 'SPB_17.4'
