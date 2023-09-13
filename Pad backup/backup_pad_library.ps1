@@ -17,20 +17,35 @@ if (!(Test-Path -Path $dir)) {
     Exit
 }
 # import module in parent dir's Modules folder
+#Import-Module ".\Modules\UtilityProgram.psm1"
 Import-Module "$w_dir\footprint_building_aid_skill\Backup\Modules\UtilityProgram.psm1"
-
-#data source
-$path_array = @()
-$path_array += $w_dir + "\Library-Flex"
-$path_array += $w_dir + "\Library-Intel"
-$path_array += $w_dir + "\Library-Nvida"
-$path_array += $w_dir + "\Library-Special"
 
 # backup destination
 $dest_home = "C:\Users\" + $user_id + "\Box\Backup_Flex_PAD\"
 $dest_dir = $dest_home + (Get-Date).ToString("yyyy-MM-dd_HHmmss")
+if (!(Test-Path -Path $dest_dir)) {
+    New-Item -ItemType directory -Path $dest_dir
+}
 
-Copy-Files -path_array $path_array -dest $dest_dir
+#data source
+$path_array = @()
+$path_array += "Library-Intel"
+$path_array += "Library-Nvida"
+$path_array += "Library-Special"
+$path_array += "Library-Flex"
+
+foreach ( $path in $path_array) {
+    Copy-WithProgress -Source "$w_dir\$path" -Destination "$dest_dir\$path"
+}
+
+#Copy-Files -path_array $path_array -dest $dest_dir
 
 Compress-Folder -dir $dest_dir
-#Invoke-ps2exe -version 1.0.0.0 "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Pad backup\backup_pad_library.ps1" "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Pad backup\BackupPADLibrary.exe"
+
+# Delete oldest file when > 3 month
+Get-ChildItem -Path $dest_home -Filter "*.zip" | Where-Object { ($_.LastWriteTime -lt (Get-Date).AddMonths(-3)) } | Remove-Item
+
+<#
+$loaction = [System.Environment]::CurrentDirectory + "\Pad backup"
+Invoke-ps2exe -version 1.0.0.0 "$loaction\backup_pad_library.ps1" "$loaction\BackupPADLibrary.exe"
+#>

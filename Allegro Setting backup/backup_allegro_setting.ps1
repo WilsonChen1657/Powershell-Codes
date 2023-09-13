@@ -64,4 +64,8 @@ foreach ($ver in $version_array) {
 }
 
 Compress-Folder -dir $dest_dir
-#Invoke-ps2exe -version 1.0.0.0 "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Allegro Setting backup\backup_allegro_setting.ps1" "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Allegro Setting backup\BackupAllegroSetting.exe"
+
+<#
+$loaction = [System.Environment]::CurrentDirectory + "\Allegro Setting backup"
+Invoke-ps2exe -version 1.0.0.0 "$loaction\backup_allegro_setting.ps1" "$loaction\BackupPADLibrary.exe"
+#>
