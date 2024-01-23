@@ -1,13 +1,39 @@
+<# Approved Verbs for PowerShell Commands
+https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7.4
+
+Import-Module "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Modules\UtilityProgram.psm1"
+#>
+
 #region Features
-function Copy-Files ([Array]$path_array, [string]$dest) {
-    if (!(Test-Path -Path $dest)) {
-        New-Item -ItemType directory -Path $dest
+
+#region Check connection
+function Test-WDirConnection ([string]$target_dir) {
+    $user_id = [Environment]::UserName
+    Write-Host "Hello $user_id"
+    if (!(Test-Path -Path $target_dir)) {
+        Write-Host "Can't connect to W:\, Please check your connection!" -ForegroundColor Red
+        return $false
+    }
+
+    $dir = "C:\Users\" + $user_id
+    if (!(Test-Path -Path $dir)) {
+        Write-Host "Directory does not exist $dir" -ForegroundColor Red
+        return $false
     }
     
-    foreach ( $path in $path_array) {
+    return $true
+}
+#endregion
+
+function Copy-Files ([Array]$FilePath, [string]$Destination) {
+    if (!(Test-Path -Path $Destination)) {
+        New-Item -ItemType directory -Path $Destination
+    }
+    
+    foreach ($path in $FilePath) {
         if ((Test-Path -Path $path) -or (Test-Path -Path $path -PathType Leaf)) {
-            write-host "# Backing up $path to $dest"
-            Copy-Item -Path $path -Destination $dest -Recurse -Force
+            write-host "# Copying $path to $Destination"
+            Copy-Item -Path $path -Destination $Destination -Recurse -Force
         }
         else {
             Write-Warning "$path not found"
@@ -21,7 +47,7 @@ function Compress-Folder ([string]$dir) {
     $zip_file = "$dir.zip"
     Compress-Archive -Path $dir -DestinationPath $zip_file
     
-    if ((Test-Path -Path $zip_file -PathType Leaf)) {
+    if (Test-Path -Path $zip_file -PathType Leaf) {
         # Delete folder
         Remove-Item $dir -Recurse -Force
         Write-Host "Compress complete !!`n$zip_file" -ForegroundColor Green
@@ -80,7 +106,7 @@ function Copy-WithProgress {
     $TotalFileCount = $StagingContent.Count - 1;
 
     # Get the total number of bytes to be copied
-    [RegEx]::Matches(($StagingContent -join "`n"), $RegexBytes) | % { $BytesTotal = 0; } { $BytesTotal += $_.Value; };
+    [RegEx]::Matches(($StagingContent -join "`n"), $RegexBytes) | ForEach-Object { $BytesTotal = 0; } { $BytesTotal += $_.Value; };
     Write-Verbose -Message ('Total bytes to be copied: {0}' -f $BytesTotal);
     #endregion Robocopy Staging
 
@@ -112,7 +138,7 @@ function Copy-WithProgress {
 
     #region Function output
     [PSCustomObject]@{
-        Source = $Source;
+        Source      = $Source;
         Destination = $Destination;
         BytesCopied = $BytesCopied;
         FilesCopied = $CopiedFileCount;
