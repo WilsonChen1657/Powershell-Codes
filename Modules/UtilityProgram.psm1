@@ -25,6 +25,23 @@ function Test-WDirConnection ([string]$target_dir) {
 }
 #endregion
 
+#region get process and kill it
+function Close-Process([string]$process_name) {
+    $process = Get-Process $process_name -ErrorAction SilentlyContinue
+    if ($process) {
+        # try gracefully first
+        #$process.CloseMainThread()
+        $process.CloseMainWindow()
+        # kill after five seconds
+        Start-Sleep 5
+        if (!$process.HasExited) {
+            $process | Stop-Process -Force
+        }
+    }
+}
+
+#endregion
+
 function Copy-Files ([Array]$FilePath, [string]$Destination) {
     if (!(Test-Path -Path $Destination)) {
         New-Item -ItemType directory -Path $Destination

@@ -35,6 +35,6 @@ Copy-Files -FilePath $path_array -Destination $dest_dir
 Compress-Folder -dir $dest_dir
 
 <#
-$dir = [System.Environment]::CurrentDirectory + "\Allegro Setting backup"
-Invoke-ps2exe -version 1.0.0.0 "$dir\backup_flex_pad.ps1" "$dir\BackupFlexPAD.exe"
+$dir = [System.Environment]::CurrentDirectory
+Invoke-ps2exe -version 1.0.0.1 "$dir\backup_skill.ps1" "$dir\BackupFlexPAD.exe"
 #>

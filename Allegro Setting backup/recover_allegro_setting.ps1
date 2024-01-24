@@ -24,8 +24,16 @@ if (!$test_result) {
 }
 #endregion
 
-#Import-Module "$w_dir\footprint_building_aid_skill\Backup\Modules\UtilityProgram.psm1"
-Import-Module "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Modules\UtilityProgram.psm1"
+# check Allegro not running
+if (Get-Process allegro) {
+    Write-Host "Please close Allegro before recover settings!" -ForegroundColor Red
+    Write-Host "Press any key to continue..."
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    Exit
+}
+
+Import-Module "$w_dir\footprint_building_aid_skill\Backup\Modules\UtilityProgram.psm1"
+#Import-Module "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Modules\UtilityProgram.psm1"
 
 #source directory
 $source_dir = "$box_dir\Backup_Allegro_setting\"

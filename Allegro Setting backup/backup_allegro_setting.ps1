@@ -22,6 +22,14 @@ if (!$test_result) {
 }
 #endregion
 
+# check Allegro not running
+if (Get-Process allegro -ErrorAction SilentlyContinue) {
+    Write-Host "Please close Allegro before backup settings!" -ForegroundColor Red
+    Write-Host "Press any key to continue..."
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    Exit
+}
+
 Import-Module "$w_dir\footprint_building_aid_skill\Backup\Modules\UtilityProgram.psm1"
 
 # backup destination
@@ -83,7 +91,8 @@ foreach ($ver in $version_array) {
 
 Compress-Folder -dir $dest_dir
 
+
 <#
 $dir = [System.Environment]::CurrentDirectory + "\Allegro Setting backup"
-Invoke-ps2exe -version 1.0.0.1 "$dir\backup_allegro_setting.ps1" "$dir\BackupAllegroSetting.exe"
+Invoke-ps2exe -version 1.0.0.2 "$dir\backup_allegro_setting.ps1" "$dir\BackupAllegroSetting.exe"
 #>
