@@ -25,7 +25,7 @@ if (!$test_result) {
 #endregion
 
 # check Allegro not running
-if (Get-Process allegro) {
+if (Get-Process allegro -ErrorAction SilentlyContinue) {
     Write-Host "Please close Allegro before recover settings!" -ForegroundColor Red
     Write-Host "Press any key to continue..."
     $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
@@ -56,11 +56,12 @@ Copy-Files -FilePath $source.FullName -Destination $Env:HOME
 
 # versions
 $version_array = 'SPB_16.6', 'SPB_17.2', 'SPB_17.4'
-$cuimenus_path = "share\pcb\text\cuimenus\"
-$capture_path = "tools\capture\"
-$nclegend_path = "share\pcb\text\nclegend\"
-$pcb_path = "share\local\pcb\"
-$skill_path = $pcb_path + "skill\"
+$cuimenus_path = "share\pcb\text\cuimenus"
+$capture_path = "tools\capture"
+$nclegend_path = "share\pcb\text\nclegend"
+$pcb_path = "share\local\pcb"
+$skill_path = "$pcb_path\skill"
+$cadance_dir = "C:\Cadence"
 
 foreach ($ver in $version_array) {
     $ver_folder = ($backup_files).Where({ $_.Name -eq $ver })
@@ -85,7 +86,7 @@ foreach ($ver in $version_array) {
         }
 
         if (![string]::IsNullOrEmpty($file_path)) {
-            $dest = "$Env:HOME\$ver\$file_path"
+            $dest = "$cadance_dir\$ver\$file_path"
             #$dest = "C:\Users\tpiwiche\Desktop\restore_test\$ver\$file_path"
             $same_count = (Get-ChildItem -Path $dest $filename*).Count
             $old_file = (Get-ChildItem -Path $dest).Where({ $_.Name -eq $filename.Name }, 'First', 1)
@@ -110,6 +111,6 @@ $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 Exit
 
 <#
-$dir = [System.Environment]::CurrentDirectory + "\Allegro Setting backup"
+$dir = [System.Environment]::CurrentDirectory + "\Allegro_setting_backup"
 Invoke-ps2exe -version 1.0.0.0 "$dir\recover_allegro_setting.ps1" "$dir\RecoverAllegroSetting.exe"
 #>

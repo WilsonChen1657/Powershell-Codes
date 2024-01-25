@@ -68,24 +68,25 @@ Copy-Files -FilePath $pcbenv_dir -Destination $dest_dir
 # versions
 $version_array = 'SPB_16.6', 'SPB_17.2', 'SPB_17.4'
 
-$cuimenus_path = "share\pcb\text\cuimenus\"
-$capture_path = "tools\capture\"
-$nclegend_path = "share\pcb\text\nclegend\"
-$pcb_path = "share\local\pcb\"
-$skill_path = $pcb_path + "skill\"
+$cuimenus_path = "share\pcb\text\cuimenus"
+$capture_path = "tools\capture"
+$nclegend_path = "share\pcb\text\nclegend"
+$pcb_path = "share\local\pcb"
+$skill_path = "$pcb_path\skill"
 
+$cadance_dir = "C:\Cadence"
 foreach ($ver in $version_array) {
-    $dir = "$Env:HOME\$ver\"
+    $dir = "$cadance_dir\$ver"
     $addr_array = @()
-    $addr_array += $dir + $cuimenus_path + "allegro.men"
-    $addr_array += $dir + $cuimenus_path + "pcb_symbol.men"
-    $addr_array += $dir + $capture_path + "allegro.cfg"
-    $addr_array += $dir + $capture_path + "CAPTURE.INI"
-    $addr_array += $dir + $nclegend_path + "default-mil.dlt"
-    $addr_array += $dir + $pcb_path + "license_packages_Allegro.txt"
-    $addr_array += $dir + $skill_path + "allegro.ilinit"
+    $addr_array += "$dir\$cuimenus_path\allegro.men"
+    $addr_array += "$dir\$cuimenus_path\pcb_symbol.men"
+    $addr_array += "$dir\$capture_path\allegro.cfg"
+    $addr_array += "$dir\$capture_path\CAPTURE.INI"
+    $addr_array += "$dir\$nclegend_path\default-mil.dlt"
+    $addr_array += "$dir\$pcb_path\license_packages_Allegro.txt"
+    $addr_array += "$dir\$skill_path\allegro.ilinit"
 
-    $dest = $dest_dir + "\" + $ver
+    $dest = "$dest_dir\$ver"
     Copy-Files -FilePath $addr_array -Destination $dest
 }
 
@@ -93,6 +94,6 @@ Compress-Folder -dir $dest_dir
 
 
 <#
-$dir = [System.Environment]::CurrentDirectory + "\Allegro Setting backup"
+$dir = [System.Environment]::CurrentDirectory + "\Allegro_setting_backup"
 Invoke-ps2exe -version 1.0.0.2 "$dir\backup_allegro_setting.ps1" "$dir\BackupAllegroSetting.exe"
 #>
