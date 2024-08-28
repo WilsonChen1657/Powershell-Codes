@@ -5,7 +5,7 @@ Import-Module "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Modules\UtilityP
 #>
 
 #region Public Porperty
-$global:w_dir = "\\tpint035\ECAD"
+$global:w_dir = "\\tpint60002\ECAD"
 #$w_dir = "\\10.208.193.12\ECAD"
 $global:cadance_dir = "C:\Cadence"
 $global:ver_array = 'SPB_16.6', 'SPB_17.2', 'SPB_17.4'

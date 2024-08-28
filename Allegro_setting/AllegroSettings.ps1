@@ -2,7 +2,7 @@ param(
     [string]$input_key
 )
 
-$w_dir = "\\tpint035\ECAD"
+$w_dir = "\\tpint60002\ECAD"
 if (!(Test-Path $w_dir)) {
     throw "Can't connect to W:\, Please check your VPN connection!"
 }
