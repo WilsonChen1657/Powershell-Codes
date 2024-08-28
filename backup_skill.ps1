@@ -27,12 +27,15 @@ Import-Module "$w_dir\footprint_building_aid_skill\Backup\Modules\UtilityProgram
 $path_array = @("$w_dir\footprint_building_aid_skill")
 
 # 備份目標路徑
-$backup_dir = "C:\Users\$Env:UserName\Box\Backup_skill\"
-$dest_dir = $backup_dir + (Get-Date).ToString("yyyy-MM-dd_HHmmss")
+$backup_dir = "$box_dir\Backup_skill"
+$dest_dir = UtilityProgram\Get-NowFolder $backup_dir
 
-Copy-Files -FilePath $path_array -Destination $dest_dir
+UtilityProgram\Copy-Files -FilePath $path_array -Destination $dest_dir
 
-Compress-Folder -dir $dest_dir
+if ((UtilityProgram\Compress-Folder $dest_dir) -eq $true) {
+    Write-Host "Backup Successfully!!" -ForegroundColor Green
+}
+Show-PressAnyKey
 
 <#
 $dir = [System.Environment]::CurrentDirectory
