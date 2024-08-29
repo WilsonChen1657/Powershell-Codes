@@ -9,7 +9,6 @@ $def_pkg_dir = Select-Folder "W:\footprint_building_aid_skill\Backup\Default_pac
 $def_files = Get-ChildItem $def_pkg_dir
 
 foreach ($file in $def_files) {
-    $max_revs = 3
     if ($global:ver_array.Contains( $file.Name)) {
         $ver_files = Get-ChildItem $file.FullName
         foreach ($ver_file in $ver_files) {
@@ -28,7 +27,7 @@ foreach ($file in $def_files) {
             if (![string]::IsNullOrEmpty($dest_path)) {
                 $dest_path = "$global:cadance_dir\$file\$dest_path"
                 #$dest_path = "C:\Users\tpiwiche\Desktop\restore_test\$file\$dest_path"
-                UtilityProgram\Copy-Reversion -Source $ver_file -Destination $dest_path
+                UtilityProgram\Copy-Reversion -Source $ver_file -Destination $dest_path -MaxRevs 100
             }
         }
     }
@@ -56,11 +55,11 @@ foreach ($file in $def_files) {
                 foreach ($ver in $global:ver_array) {
                     $dest = "$global:cadance_dir\$ver\$dest_path"
                     #$dest_path = "C:\Users\tpiwiche\Desktop\restore_test\$ver\$dest_path"
-                    UtilityProgram\Copy-Reversion -Source $file -Destination $dest -MaxRevs $max_revs
+                    UtilityProgram\Copy-Reversion -Source $file -Destination $dest -MaxRevs 100
                 }
             }
             else {
-                UtilityProgram\Copy-Reversion -Source $file -Destination $dest_path -MaxRevs $max_revs
+                UtilityProgram\Copy-Reversion -Source $file -Destination $dest_path -MaxRevs 100
             }
             
         }

@@ -37,14 +37,15 @@ else {
         # 用 PowerShell 陣列轉字串做出以空白間隔的參數字串，含空白的參數值要加雙引號
         $task_params = @(
             "/Create",
-            "/TN", "`"$task_path\$task_name`"",
-            "/SC", "monthly",
-            "/D", "1", #每個月幾號
-            "/ST", "17:00", #開始時間
-            "/TR", "Powershell.exe -ExecutionPolicy RemoteSigned -File $backup_file 3",
+            "/TN", "`"$task_path\$task_name`"", #task name
+            "/SC", "monthly", #schedule type
+            "/D", "1", #day
+            "/ST", "14:00", #Start time
+            "/TR", "Powershell.exe -ExecutionPolicy RemoteSigned -File $backup_file 3", #task run
             "/RU", [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
         )
         schtasks.exe $task_params
+
         Write-Host "Register task schedule Successfully" -ForegroundColor Green
         Show-PressAnyKey
     }

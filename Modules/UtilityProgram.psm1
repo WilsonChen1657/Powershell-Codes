@@ -5,7 +5,7 @@ Import-Module "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Modules\UtilityP
 #>
 
 #region Public Porperty
-$global:w_dir = "\\tpint035\ECAD"
+$global:w_dir = "\\tpint60002\ECAD"
 #$w_dir = "\\10.208.193.12\ECAD"
 $global:cadance_dir = "C:\Cadence"
 $global:ver_array = 'SPB_16.6', 'SPB_17.2', 'SPB_17.4'
@@ -17,6 +17,57 @@ $global:nclegend_path = "share\pcb\text\nclegend"
 $global:pcb_path = "share\local\pcb"
 $global:skill_path = "$global:pcb_path\skill"
 #endregion
+
+class SelectMenu {
+    #region Property
+    [string] $Title
+    [string[]] $Options
+    [string] $Question = "Select an option and press Enter"
+    [string] $DefaultKey = "x"
+    #endregion
+
+    #region Main
+    SelectMenu() { $this.Init(@{}) }
+    SelectMenu([hashtable]$Properties) { $this.Init($Properties) }
+    #endregion
+
+    #region Function
+    [void] Init([hashtable]$Properties) {
+        foreach ($Property in $Properties.Keys) {
+            $this.$Property = $Properties.$Property
+        }
+    }
+
+    [string]Show() {
+        Clear-Host
+        $banner_line = $(('=') * 16)
+        Write-Host "$banner_line " $this.Title " $banner_line"
+        foreach ( $option in $this.Options) {
+            Write-Host $option
+        }
+        $input_key = Read-Host $this.Question
+        if (!$input_key) {
+            $input_key = $this.DefaultKey
+        }
+
+        return $input_key
+    }
+    #endregion
+}
+
+function New-SelectMenu ([string]$Title, [string[]]$Options, [string]$DefaultKey) {
+    $menu = [SelectMenu]::new()
+    if (![string]::IsNullOrEmpty($Title)) {
+        $menu.Title = $Title
+    }
+    if ($Options.Count -gt 0) {
+        $menu.Options = $Options
+    }
+    if (![string]::IsNullOrEmpty($DefaultKey)) {
+        $menu.DefaultKey = $DefaultKey
+    }
+    $menu
+}
 
 #region Features
 
@@ -121,12 +172,13 @@ function Copy-Reversion ([System.IO.FileSystemInfo]$Source, [string]$Destination
             if ($same_count -gt $MaxRevs) {
                 $index = 1
                 # delete oldest file(,1)
-                $same_files.Where({ $_.Name -ne $Source.Name }) | Sort-Object LastWriteTime | Select-Object -First ($same_count - 3) | Remove-Item -Recurse -Confirm:$false
+                $same_files.Where({ $_.Name -ne $Source.Name }) | Sort-Object Name | Select-Object -First ($same_count - $MaxRevs) | Remove-Item -Recurse -Confirm:$false
                 # re get files
                 $same_files = Get-ChildItem -Path $Destination -Filter "$Source*"
                 # rename file
-                foreach ($file in $same_files.Where({ $_.Name -ne $Source.Name }) | Sort-Object LastWriteTime) {
-                    $file | Rename-Item -NewName "$file,$index"
+                foreach ($file in $same_files.Where({ $_.Name -ne $Source.Name }) | Sort-Object Name) {
+                    $new_name = ($file.Name -split ",")[0] + ",$index"
+                    $file | Rename-Item -NewName $new_name
                     $index++
                 }
 
@@ -137,8 +189,14 @@ function Copy-Reversion ([System.IO.FileSystemInfo]$Source, [string]$Destination
         }
 
         Write-Host "# Copying $Source to $Destination"
-        #Copy-Files -FilePath $Source.FullName -Destination $Destination
-        Copy-Item -Path $Source.FullName -Destination $Destination -Force -Recurse
+        # -PassThru to get copied item
+        $copied = Copy-Item $Source.FullName $Destination -Force -Recurse -PassThru
+        # to remove ReadOnly flag when Attributes has ReadOnly flag
+        foreach ($copy in $copied) {
+            if ($copy.Attributes.HasFlag([System.IO.FileAttributes]::ReadOnly)) {
+                $copy.Attributes -= [System.IO.FileAttributes]::ReadOnly
+            }
+        }
     }
 }
 

@@ -10,16 +10,46 @@ UtilityProgram\Test-PathExist "$Env:HOME\pcbenv"
 UtilityProgram\Test-Allegro
 #endregion
 
-# backup directory
-$backup_dir = "$box_dir\@Backup_Allegro_setting\$Env:COMPUTERNAME"
-if (!(Test-Path $backup_dir -PathType Container) ) {
-    Write-Host "$backup_dir directory not found!!" -ForegroundColor Red
+$backup_dir = "$box_dir\@Backup_Allegro_setting"
+#region Create select menu
+$options = @()
+$cn_folders = Get-ChildItem $backup_dir -Directory
+$i = 1
+$def_key = "x"
+foreach ($folder in $cn_folders) {
+    $option = "[$i] $folder"
+    if ($folder.Name -eq $Env:COMPUTERNAME) {
+        $option = "$option (current)"
+        $def_key = $i
+    }
+    $options += $option
+    $i++
+}
+$cn_menu = UtilityProgram\New-SelectMenu 'Recover from computer backup' $options $def_key
+#endregion
+
+if (!(Test-Path $backup_dir -PathType Container)) {
+    Write-Host "$backup_dir not found!!" -ForegroundColor Red
     Show-PressAnyKey
 }
 else {
+    $folder = $cn_folders[0]
+    # when there are more than one dir
+    if ( $cn_menu.Options.Count -gt 1) {
+        do {
+            $input_key = $cn_menu.Show()
+        }
+        until((($input_key -match "^\d+$") -and ($input_key -le $cn_menu.Options.Count)) -or ($input_key -eq "x"))
+
+        if ($input_key -eq "x") {
+            return
+        }
+        $folder = $cn_folders[[int]$input_key - 1]
+    }
+    $backup_dir = "$backup_dir\$folder"
     $latest_backup_zip = Get-ChildItem $backup_dir *.zip | Sort-Object LastWriteTime | Select-Object -Last 1
     if (!($latest_backup_zip -is [System.IO.FileSystemInfo])) {
-        Write-Host "$backup_dir directory is empty!!" -ForegroundColor Red
+        Write-Host "$backup_dir is empty!!" -ForegroundColor Red
         Show-PressAnyKey
     }
     else {
@@ -30,7 +60,9 @@ else {
         $folder_list = "pcbenv", "cdssetup"
         foreach ($folder_name in $folder_list) {
             $file_info = ($backup_files).Where({ $_.Name -eq $folder_name }) | Select-Object -First 1
-            UtilityProgram\Copy-Reversion -Source $file_info -Destination $Env:HOME -MaxRevs 100
+            if ($file_info -is [System.IO.DirectoryInfo]) {
+                UtilityProgram\Copy-Reversion -Source $file_info -Destination $Env:HOME -MaxRevs 100
+            }
         }
         # version files
         foreach ($ver in $global:ver_array) {
