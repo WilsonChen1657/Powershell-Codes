@@ -60,12 +60,19 @@ $web.Add_DocumentCompleted({
         $doc = $web.Document
         if ($doc) {
             $login_btn = $doc.getElementById("ContentPlaceHolder1_cmdOK").DomElement
+            $sign_in_btn = $doc.getElementById("ContentPlaceHolder1_Button1").DomElement
             if ($login_btn) {
                 $doc.getElementById("ContentPlaceHolder1_txtUserName").InnerText = $user_name
                 $doc.getElementById("ContentPlaceHolder1_txtPassword").InnerText = $password
                 $login_btn.Click()
-                $doc.getElementById("TreeView1t18").DomElement.Click()
-                #$doc.getElementById("ContentPlaceHolder1_Button1").DomElement.Click()
+                #$doc = $web.Document
+            }
+            else {
+                if ($null -eq $sign_in_btn) {
+                    # click Sign in/out
+                    $doc.getElementById("TreeView1t18").DomElement.Click()
+                    #$doc.getElementById("ContentPlaceHolder1_Button1").DomElement.Click()
+                }
             }
         }
 
