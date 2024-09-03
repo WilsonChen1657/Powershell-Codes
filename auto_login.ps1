@@ -5,6 +5,90 @@ $url = "https://hr.tpi.flextronics.com/wUZLFlow/Default.aspx"
 $user_name = "tpiwiche"
 $password = "Chii153kawa"
 
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Auto login HR E-Flow System"
+$form.Size = New-Object System.Drawing.Size @(1040, 710)
+
+$web_browser = New-Object System.Windows.Forms.WebBrowser
+$web_browser.Dock = 'Fill'
+$web_browser.ScriptErrorsSuppressed = $true
+$web_browser.Navigate($url)
+
+$login_handler = {
+    param (
+        [System.Windows.Forms.WebBrowser]$browser,
+        [System.Windows.Forms.WebBrowserDocumentCompletedEventArgs]$e
+    )
+    if ($browser -is [System.Windows.Forms.WebBrowser]) {
+        # Get the document
+        $doc = $browser.Document
+        if ($doc) {
+            $login_btn = $doc.getElementById("ContentPlaceHolder1_cmdOK").DomElement
+            if ($login_btn) {
+                # Unregister the event
+                $browser.Remove_DocumentCompleted($login_handler)
+                $browser.Add_DocumentCompleted($sign_in_treeview_handler)
+                # Login
+                $doc.getElementById("ContentPlaceHolder1_txtUserName").InnerText = $user_name
+                $doc.getElementById("ContentPlaceHolder1_txtPassword").InnerText = $password
+                $login_btn.Click()
+                Write-Host "Login complete" -ForegroundColor Cyan
+            }
+        }
+    }
+}
+
+$sign_in_treeview_handler = {
+    param (
+        [System.Windows.Forms.WebBrowser]$browser,
+        [System.Windows.Forms.WebBrowserDocumentCompletedEventArgs]$e
+    )
+    if ($browser -is [System.Windows.Forms.WebBrowser]) {
+        $doc = $browser.Document
+        if ($doc) {
+            $browser.Remove_DocumentCompleted($sign_in_treeview_handler)
+            $browser.Add_DocumentCompleted($sign_in_handler)
+            # Click "Sign In / Sign Out" treeview item
+            $doc.getElementById("TreeView1t18").DomElement.Click()
+        }
+    }
+}
+
+$sign_in_handler = {
+    param (
+        [System.Windows.Forms.WebBrowser]$browser,
+        [System.Windows.Forms.WebBrowserDocumentCompletedEventArgs]$e
+    )
+    if ($browser -is [System.Windows.Forms.WebBrowser]) {
+        $doc = $browser.Document
+        if ($doc) {
+            $browser.Remove_DocumentCompleted($sign_in_handler)
+            $now = Get-Date
+            $base_datetime = Get-Date -Hour 12 -Minute 0 -Second 0
+            # Sign in time
+            $in_time = $doc.getElementById("ContentPlaceHolder1_txtInTime").InnerText
+            # Sign out time
+            $out_time = $doc.getElementById("ContentPlaceHolder1_txtOutTime").InnerText
+            if (($null -eq $in_time) -and ($now.TimeOfDay -lt $base_datetime.TimeOfDay)) {
+                Write-Host "Sign in" -ForegroundColor Cyan
+                # Click "Sign In"
+                #$doc.getElementById("ContentPlaceHolder1_Button1").DomElement.Click()
+            }
+            elseif (($null -eq $out_time) -and ($now.TimeOfDay -gt $base_datetime.TimeOfDay)) {
+                Write-Host "Sign out" -ForegroundColor Cyan
+                # Click "Sign Out"
+                #$doc.getElementById("ContentPlaceHolder1_Button2").DomElement.Click()
+            }
+        }
+    }
+}
+
+$web_browser.Add_DocumentCompleted($login_handler)
+$form.Controls.Add($web_browser)
+$form.ShowDialog()
+
+##############################################
+
 <#
 [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
 [xml]$xaml = @'
@@ -42,45 +126,5 @@ $WebBrowser.Add_DocumentCompleted({
 # $syncHash.Window = $Form
 # $syncHash.Browser = $WebBrowser
 $Form.ShowDialog()
-
-#>
-
-##############################################
-#<#
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "My form"
-$form.Size = New-Object System.Drawing.Size @(1070, 860)
-$web = New-Object System.Windows.Forms.WebBrowser
-$web.Location = New-Object System.Drawing.Point(3, 3)
-$web.MinimumSize = New-Object System.Drawing.Size(20, 20)
-$web.Size = New-Object System.Drawing.Size(1050, 840)
-$web.ScriptErrorsSuppressed = $true
-$web.Navigate($url)
-$web.Add_DocumentCompleted({
-        $doc = $web.Document
-        if ($doc) {
-            $login_btn = $doc.getElementById("ContentPlaceHolder1_cmdOK").DomElement
-            $sign_in_btn = $doc.getElementById("ContentPlaceHolder1_Button1").DomElement
-            if ($login_btn) {
-                $doc.getElementById("ContentPlaceHolder1_txtUserName").InnerText = $user_name
-                $doc.getElementById("ContentPlaceHolder1_txtPassword").InnerText = $password
-                $login_btn.Click()
-                #$doc = $web.Document
-            }
-            else {
-                if ($null -eq $sign_in_btn) {
-                    # click Sign in/out
-                    $doc.getElementById("TreeView1t18").DomElement.Click()
-                    #$doc.getElementById("ContentPlaceHolder1_Button1").DomElement.Click()
-                }
-            }
-        }
-
-        Write-Host "Login complete" -ForegroundColor Cyan
-        #Unregister-Event -SourceIdentifier "Add_DocumentCompleted"
-        #$web.Delete_DocumentCompleted({})
-    })
-$form.Controls.Add($web)
-$form.ShowDialog()
 
 #>
