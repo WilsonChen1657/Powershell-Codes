@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Drawing
 
 $url = "https://hr.tpi.flextronics.com/wUZLFlow/Default.aspx"
 $user_name = "tpiwiche"
-$password = "Chii153kawa"
+$password = "w12210210W"
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Auto login HR E-Flow System"
@@ -23,16 +23,27 @@ $login_handler = {
         # Get the document
         $doc = $browser.Document
         if ($doc) {
-            $login_btn = $doc.getElementById("ContentPlaceHolder1_cmdOK").DomElement
-            if ($login_btn) {
-                # Unregister the event
-                $browser.Remove_DocumentCompleted($login_handler)
-                $browser.Add_DocumentCompleted($sign_in_treeview_handler)
-                # Login
-                $doc.getElementById("ContentPlaceHolder1_txtUserName").InnerText = $user_name
-                $doc.getElementById("ContentPlaceHolder1_txtPassword").InnerText = $password
-                $login_btn.Click()
-                Write-Host "Login complete" -ForegroundColor Cyan
+            # Language dropdown
+            $dropdown = $doc.getElementById("ContentPlaceHolder1_ddlLanguage").DomElement
+            $option_zh_tw = $dropdown | Where-Object { $_.value -eq "zh-TW" }
+            if ( $option_zh_tw.selected -eq $false) {
+                $option_zh_tw.selected = $true
+                # Trigger the change event
+                $dropdown.fireEvent("onchange")
+            }
+            else {
+                $login_btn = $doc.getElementById("ContentPlaceHolder1_cmdOK").DomElement
+                if ($login_btn) {
+                    # Unregister the login event
+                    $browser.Remove_DocumentCompleted($login_handler)
+                    # Register sign in treeview event
+                    $browser.Add_DocumentCompleted($sign_in_treeview_handler)
+                    # Fill in the login details
+                    $doc.getElementById("ContentPlaceHolder1_txtUserName").InnerText = $user_name
+                    $doc.getElementById("ContentPlaceHolder1_txtPassword").InnerText = $password
+                    $login_btn.Click()
+                    Write-Host "Login complete" -ForegroundColor Cyan
+                }
             }
         }
     }
@@ -86,45 +97,3 @@ $sign_in_handler = {
 $web_browser.Add_DocumentCompleted($login_handler)
 $form.Controls.Add($web_browser)
 $form.ShowDialog()
-
-##############################################
-
-<#
-[void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
-[xml]$xaml = @'
-<Window
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="PowerShell HTML GUI" WindowStartupLocation="Manual">
-    <Grid>
-        <WebBrowser
-            Name="WebBrowser"
-            Margin="10,10,0,0"
-            Width="415"
-            Height="340"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-        />
-    </Grid>
-</Window>
-'@
-$reader = New-Object System.Xml.XmlNodeReader($xaml)
-$Form = [Windows.Markup.XamlReader]::Load($reader)
-$Form.Width = 415
-$Form.Height = 340
-$Form.Topmost = $True
-$WebBrowser = $Form.FindName('WebBrowser')
-$WebBrowser.Navigate($url)
-$WebBrowser.Add_DocumentCompleted({
-        $doc = $this.Document
-        if ($doc) {
-            $doc.getElementById("ContentPlaceHolder1_txtUserName").InnerText = $user_name
-            $doc.getElementById("ContentPlaceHolder1_txtPassword").InnerText = $password
-            $doc.getElementById("ContentPlaceHolder1_cmdOK").Click()
-        }
-    })
-# $syncHash.Window = $Form
-# $syncHash.Browser = $WebBrowser
-$Form.ShowDialog()
-
-#>
