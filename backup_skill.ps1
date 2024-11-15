@@ -1,5 +1,5 @@
 Write-Host "Hello $Env:UserName"
-$w_dir = "\\tpint035\ECAD"
+$w_dir = "\\tpint60002\ECAD"
 #region 檢查W槽連線
 $test_result = $true
 if (!(Test-Path -Path $w_dir)) {
