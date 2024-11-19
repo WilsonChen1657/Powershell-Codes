@@ -4,7 +4,6 @@ Write-Host "Starting register Allegro setting backup task..."
 UtilityProgram\Test-PathExist $global:w_dir
 
 $backup_file = "$global:w_dir\footprint_building_aid_skill\Backup\Programs\AllegroSettings.ps1"
-#$backup_file = "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Allegro_setting\AllegroSettings.ps1"
 if (!(Test-Path -Path $backup_file -PathType Leaf)) {
     Write-Host "$backup_file not found!!" -ForegroundColor Red
     Show-PressAnyKey
@@ -41,7 +40,7 @@ else {
             "/SC", "monthly", #schedule type
             "/D", "1", #day
             "/ST", "14:00", #Start time
-            "/TR", "Powershell.exe -ExecutionPolicy RemoteSigned -File $backup_file 3", #task run
+            "/TR", "Powershell.exe -ExecutionPolicy Bypass -File $backup_file 3", #task run
             "/RU", [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
         )
         schtasks.exe $task_params
@@ -55,5 +54,7 @@ else {
 $dir = [System.Environment]::CurrentDirectory + "\Allegro_setting"
 Invoke-ps2exe $dir\register_backup_task.ps1 $dir\RegisterBackupTask.exe
 
+$ut_dir = [System.Environment]::CurrentDirectory + "\Modules\UtilityProgram.psm1"
+Import-Module $ut_dir
 Out-EncryptedFile "$dir\register_backup_task.ps1"
 #>

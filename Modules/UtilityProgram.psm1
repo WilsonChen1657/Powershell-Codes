@@ -5,9 +5,16 @@ Import-Module "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Modules\UtilityP
 #>
 
 #region Public Porperty
-$global:w_dir = "\\tpint60002\ECAD"
-#$w_dir = "\\10.208.193.12\ECAD"
+$global:w_dir = "W:" # ("\\tpint60002\ECAD", "\\10.35.35.6\ECAD")
 $global:cadance_dir = "C:\Cadence"
+# When $Env:HOME has not set yet
+if ([string]::IsNullOrEmpty($Env:HOME)) {
+    Write-Host "Environment variable 'HOME' not found!" -ForegroundColor Red
+    Write-Host "Setting 'HOME' to $global:cadance_dir"
+    [Environment]::SetEnvironmentVariable("HOME", $global:cadance_dir, [System.EnvironmentVariableTarget]::User)
+    $Env:HOME = [Environment]::GetEnvironmentVariable("HOME", [EnvironmentVariableTarget]::User)
+}
+
 $global:ver_array = 'SPB_16.6', 'SPB_17.2', 'SPB_17.4'
 $global:pcbenv_path = "$Env:HOME\pcbenv"
 $global:cdssetup_path = "$Env:HOME\cdssetup"
@@ -74,7 +81,9 @@ function New-SelectMenu ([string]$Title, [string[]]$Options, [string]$DefaultKey
 #region Check connection
 function Test-PathExist ([string]$Path) {
     if (!(Test-Path $Path)) {
-        throw "Path not found! $Path"
+        Write-Host "Path not found! $Path" -ForegroundColor Red
+        Write-Host "Press any key to continue..."
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
     }
 }
 #endregion

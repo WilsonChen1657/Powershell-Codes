@@ -2,7 +2,8 @@ param(
     [string]$input_key
 )
 
-$w_dir = "\\tpint60002\ECAD"
+$w_dir = "W:"
+#$w_dir = "\\tpint60002\ECAD"
 if (!(Test-Path $w_dir)) {
     throw "Can't connect to W:\, Please check your VPN connection!"
 }
@@ -10,13 +11,11 @@ $w_backup_dir = "$w_dir\footprint_building_aid_skill\Backup"
 if (!(((Get-Module).Where({ $_.Name -eq "UtilityProgram" }) | Select-Object -First 1) -is [PSModuleInfo])) {
     Write-Host "Importing UtilityProgram..."
     Import-Module "$w_backup_dir\Modules\UtilityProgram.psm1"
-    #Import-Module "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Modules\UtilityProgram.psm1"
 }
 
 $menu = UtilityProgram\New-SelectMenu
 $menu.Title = 'Allegro setting'
 $menu.Options = '[1] Init Allegro Setting', '[2] Register backup task', '[3] Backup Allegro Setting', '[4] Recover Allegro Setting', '[X] Exit  (default is "X")'
-#$input_key = $menu.Show()
 
 $temp_key = ""
 do {
@@ -24,7 +23,7 @@ do {
         $input_key = $menu.Show()
     }
     $program_dir = "$w_backup_dir\Programs"
-    #$program_dir = "C:\Users\tpiwiche\Documents\Git\Powershell-Codes\Allegro_setting"
+    #$program_dir = "$w_backup_dir\Allegro_setting"
     $program_path = ""
     switch ($input_key) {
         "1" { $program_path = "$program_dir\Initallegrosetting.ps1" }
@@ -36,10 +35,10 @@ do {
 
     if (![string]::IsNullOrEmpty($program_path)) {
         # check before import module
-        # RemoteSigned : 1 | Restricted : 3
-        if ((Get-ExecutionPolicy CurrentUser).value__ -ne 1) {
-            Write-Host "Setting ExecutionPolicy to RemoteSigned..."
-            Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        # RemoteSigned : 1 | Restricted : 3 | Bypass : 4
+        if ((Get-ExecutionPolicy CurrentUser).value__ -ne 4) {
+            Write-Host "Setting ExecutionPolicy to Bypass..."
+            Set-ExecutionPolicy Bypass -Scope CurrentUser -Force
         }
         
         if (Test-Path $program_path -PathType Leaf) {
