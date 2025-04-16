@@ -2,16 +2,17 @@ Write-Host "Hello $Env:UserName"
 Write-Host "Starting backup Allegro settings..."
 
 #region Check connection
-$box_dir = "C:\Users\$Env:UserName\Box"
-UtilityProgram\Test-PathExist $box_dir
+$user_dir = "C:\Users\$Env:UserName"
+UtilityProgram\Test-PathExist "$user_dir\Box"
 UtilityProgram\Test-PathExist $global:cadance_dir
 UtilityProgram\Test-PathExist $global:pcbenv_path
 UtilityProgram\Test-Allegro
 #endregion
 
 # backup destination
-$backup_dir = "$box_dir\@Backup_Allegro_setting\$Env:COMPUTERNAME"
-$dest_dir = UtilityProgram\Get-NowFolder $backup_dir
+$temp_backup_dir = "$user_dir\Documents\TempBackup\Backup_Allegro_setting\"
+$backup_dir = "$user_dir\Box\@Backup_Allegro_setting\$Env:COMPUTERNAME"
+$dest_dir = UtilityProgram\Get-NowFolder $temp_backup_dir
 
 # Computer information
 $computer_info = Get-ComputerInfo
@@ -20,9 +21,9 @@ $ip_config = ipconfig /all
 $ip_config | Out-File -FilePath "$dest_dir\ip_config.txt"
 
 # PCBENV / ENV / SCRIPT / VIEW / allegro.ilinit(user)
-UtilityProgram\Copy-Files -FilePath $global:pcbenv_path -Destination $dest_dir
+Copy-WithProgress -Source $global:pcbenv_path -Destination "$dest_dir\pcbenv"
 # CIS
-UtilityProgram\Copy-Files -FilePath $global:cdssetup_path -Destination $dest_dir
+Copy-WithProgress -Source $global:cdssetup_path -Destination "$dest_dir\cdssetup"
 
 foreach ($ver in $global:ver_array) {
     $dir = "$global:cadance_dir\$ver"
@@ -51,8 +52,9 @@ foreach ($ver in $global:ver_array) {
     if (Test-Path $path -PathType Leaf) {
         $path_array += $path
     }
-    $dest = "$dest_dir\$ver"
-    UtilityProgram\Copy-Files -FilePath $path_array -Destination $dest
+    foreach ($path in $path_array) {
+        UtilityProgram\Copy-WithPorgress -Source $path -Destination "$dest_dir\$ver"
+    }
 }
 
 #region Create README
@@ -72,6 +74,11 @@ $read_me | Out-File "$dest_dir\README.txt"
 #endregion
 
 if ((UtilityProgram\Compress-Folder $dest_dir) -eq $true) {
+    $zip_file = "$dest_dir.zip"
+    # Copy to box
+    UtilityProgram\Copy-WithPorgress -Source $zip_file -Destination $backup_dir
+    # Delete temp file
+    Get-ChildItem -Path $zip_file | Remove-Item
     Write-Host "Backup Successfully!!" -ForegroundColor Green
 }
 Show-PressAnyKey

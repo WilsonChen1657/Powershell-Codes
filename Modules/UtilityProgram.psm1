@@ -53,7 +53,7 @@ class SelectMenu {
             Write-Host $option
         }
         $input_key = Read-Host $this.Question
-        if (!$input_key) {
+        if (-not $input_key) {
             $input_key = $this.DefaultKey
         }
 
@@ -64,13 +64,13 @@ class SelectMenu {
 
 function New-SelectMenu ([string]$Title, [string[]]$Options, [string]$DefaultKey) {
     $menu = [SelectMenu]::new()
-    if (![string]::IsNullOrEmpty($Title)) {
+    if (-not [string]::IsNullOrEmpty($Title)) {
         $menu.Title = $Title
     }
     if ($Options.Count -gt 0) {
         $menu.Options = $Options
     }
-    if (![string]::IsNullOrEmpty($DefaultKey)) {
+    if (-not [string]::IsNullOrEmpty($DefaultKey)) {
         $menu.DefaultKey = $DefaultKey
     }
     $menu
@@ -80,7 +80,7 @@ function New-SelectMenu ([string]$Title, [string[]]$Options, [string]$DefaultKey
 
 #region Check connection
 function Test-PathExist ([string]$Path) {
-    if (!(Test-Path $Path)) {
+    if (-not (Test-Path $Path)) {
         Write-Host "Path not found! $Path" -ForegroundColor Red
         Write-Host "Press any key to continue..."
         $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
@@ -106,7 +106,7 @@ function Close-Process([string]$ProcessName) {
         $process.CloseMainWindow()
         # kill after five seconds
         Start-Sleep 5
-        if (!$process.HasExited) {
+        if (-not $process.HasExited) {
             $process | Stop-Process -Force
         }
     }
@@ -114,14 +114,11 @@ function Close-Process([string]$ProcessName) {
 #endregion
 
 function Get-NowFolder ([string]$Directory) {
-    if (!(Test-Path $Directory -PathType Container)) {
-        New-Item $Directory -ItemType Directory | Out-Null
+    $now_dir = Join-Path -Path $Directory -ChildPath (Get-Date -Format "yyyy-MM-dd_HHmmss")
+    if (-not (Test-Path $now_dir -PathType Container)) {
+        New-Item -Path $now_dir -ItemType Directory -Force | Out-Null
     }
-    $now_dir = "$Directory\" + (Get-Date).ToString("yyyy-MM-dd_HHmmss")
-    if (!(Test-Path $now_dir -PathType Container)) {
-        # Out-Null is for New-Item to not return extra msg
-        New-Item $now_dir -ItemType Directory | Out-Null
-    }
+
     return $now_dir
 }
 
@@ -154,24 +151,8 @@ function Show-Message ([string]$Msg, [string]$Title) {
     $wsh.Popup($Msg, 0, $Title, 0 + 64)
 }
 
-function Copy-Files ([Array]$FilePath, [string]$Destination) {
-    if (!(Test-Path $Destination -PathType Container)) {
-        New-Item $Destination -ItemType Directory
-    }
-    
-    foreach ($path in $FilePath) {
-        if ((Test-Path $path) -or (Test-Path $path -PathType Leaf)) {
-            write-host "# Copying $path to $Destination"
-            Copy-Item $path $Destination -Recurse -Force
-        }
-        else {
-            Write-Warning "$path not found"
-        }
-    }
-} 
-
 function Copy-Reversion ([System.IO.FileSystemInfo]$Source, [string]$Destination, [int]$MaxRevs = 3) {
-    if (![string]::IsNullOrEmpty($Destination)) {
+    if (-not [string]::IsNullOrEmpty($Destination)) {
         $same_files = Get-ChildItem -Path $Destination -Filter "$Source*"
         $same_count = $same_files.Count
         $old_file = (Get-ChildItem $Destination).Where({ $_.Name -eq $Source.Name }, 'First', 1)
@@ -208,12 +189,54 @@ function Copy-Reversion ([System.IO.FileSystemInfo]$Source, [string]$Destination
         }
     }
 }
+<#
+$path = "$dir\$global:skill_path\allegro.ilinit"
+$dest = "$dest_dir\$ver"
+Copy-WithPorgress -Source $path -Destination $dest
 
-function Copy-WithProgress {
-    <#
-        .NOTES
-        https://stackoverflow.com/a/21209726
-    #>
+$sourceFolder = "\\tpint60002\ECAD\Library-Special"
+$sourceFolder = "W:\Library-Flex"
+$destinationDir = "C:\Users\tpiwiche\Documents\TempBackup\Backup_Flex_PAD\2025-04-15_094723"
+Copy-WithPorgress -Source $sourceFolder -Destination $destinationDir
+#>
+function Copy-WithPorgress {
+    param (
+        [string] $Source,
+        [string] $Destination
+    )
+
+    # Create the destination directory if it doesn't exist
+    if (-not (Test-Path $Destination -PathType Container)) {
+        New-Item -Path $Destination -ItemType Directory -Force | Out-Null
+    }
+
+    Write-Host "# Copying $Source to $Destination"
+    if (Test-Path $Source -PathType Leaf) {
+        $source_data = (Split-Path $Source)
+        $file_nm = (Split-Path -Leaf $Source)
+        robocopy $source_data $Destination $file_nm /NJH /NJS | % {
+            $data = $_.Split([char]9)
+            if ("$($data[4])" -ne "") {
+                $file = "$($data[4])"
+            }
+            Write-Progress "Percentage $($data[0])" -Activity "Robocopy $Source" -CurrentOperation $file -ErrorAction SilentlyContinue
+        }
+    }
+    elseif (Test-Path $Source -PathType Container) {
+        $dest_dir = Join-Path -Path $Destination -ChildPath (Split-Path -Leaf $Source)
+        Copy-FolderWithProgress -Source $Source -Destination $dest_dir
+    }
+    else {
+        Write-Host "Source file not found: $Source" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "Copy complete!" -ForegroundColor Green
+    return $true
+}
+
+function Copy-FolderWithProgress {
+    # NOTES : https://stackoverflow.com/a/21209726
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -263,7 +286,7 @@ function Copy-WithProgress {
     #endregion Start Robocopy
 
     #region Progress bar loop
-    while (!$Robocopy.HasExited) {
+    while (-not $Robocopy.HasExited) {
         Start-Sleep -Milliseconds $ReportGap;
         $BytesCopied = 0;
         $LogContent = Get-Content -Path $RobocopyLogPath;
