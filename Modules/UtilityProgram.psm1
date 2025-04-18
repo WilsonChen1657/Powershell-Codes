@@ -125,19 +125,28 @@ function Get-NowFolder ([string]$Directory) {
 function Compress-Folder ([string]$Directory) {
     # Compress
     write-host "# Compressing $Directory"
-    $zip_file = "$Directory.zip"
-    Compress-Archive $Directory $zip_file
+    $zip_path = "$Directory.zip"
+    & "C:\Program Files\7-Zip\7z.exe" a -tzip -mx=9 $zip_path $Directory
+    # Compress-Archive will have error
+    ## ZipArchiveHelper : The specified path, file name, or both are too long. The fully qualified file name must be less than 260 characters, and the directory name must be less than 248 characters.  
     
-    if (Test-Path $zip_file -PathType Leaf) {
+    if (Test-Path $zip_path -PathType Leaf) {
         # Delete folder
         Remove-Item $Directory -Recurse -Force
-        Write-Host "Compress complete!!`n$zip_file" -ForegroundColor Green
+        Write-Host "Compress complete!!`n$zip_path" -ForegroundColor Green
     }
     else {
         Write-Host "Compress Fail!!" -ForegroundColor Red
         return $false
     }
     return $true
+}
+
+function Expand-ZipFile {
+    param (
+        [string] $Path
+    )
+    & "C:\Program Files\7-Zip\7z.exe" x $Path "-o$(Split-Path $Path)"
 }
 
 function Show-PressAnyKey {

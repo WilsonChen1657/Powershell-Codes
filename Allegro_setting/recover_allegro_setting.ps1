@@ -53,7 +53,7 @@ else {
         Show-PressAnyKey
     }
     else {
-        Expand-Archive -LiteralPath $latest_backup_zip.FullName -DestinationPath $backup_dir -Force
+        Expand-ZipFile $latest_backup_zip.FullName
         $backup_folder = Get-ChildItem $backup_dir -Directory | Sort-Object LastWriteTime | Select-Object -Last 1
         $backup_files = Get-ChildItem $backup_folder.FullName
         # pcbenv & CIS
