@@ -2,37 +2,37 @@
 Write-Host "Hello $Env:UserName"
 
 #region Check connection
-Test-PathExist $global:w_dir
-$box_dir = "C:\Users\$Env:UserName\Box"
-Test-PathExist $box_dir
+UtilityProgram\Test-PathExist $global:w_dir
+$user_dir = "C:\Users\$Env:UserName"
+UtilityProgram\Test-PathExist "$user_dir\Box"
 #endregion
 
-# backup destination
-$backup_dir = "$box_dir\Backup_Flex_PAD\"
-$dest_dir = UtilityProgram\Get-NowFolder $backup_dir
+# Backup destination
+$temp_backup_dir = "$user_dir\Documents\TempBackup\Backup_Flex_PAD\"
+$backup_dir = "$user_dir\Box\Backup_Flex_PAD\"
+$dest_dir = UtilityProgram\Get-NowFolder $temp_backup_dir
 
-#data source
-<# 批次複製 & 進度條
-$path_array = @( "Library-Intel", "Library-Nvida", "Library-Special", "Library-Flex")
-foreach ( $path in $path_array) {
-    Copy-WithProgress -Source "$w_dir\$path" -Destination "$dest_dir\$path"
-}
-#>
-
-$path_array = New-Object System.Collections.ArrayList
-foreach ( $path in @( "Library-Intel", "Library-Nvida", "Library-Special", "Library-Flex")) {
-    $path_array.Add("$global:w_dir\$path")
+# 批次複製 & 進度條
+$excluded_folders = @("footprint_building_aid_skill", "Library-Checking")
+$path_list = Get-ChildItem -Path $global:w_dir | 
+Where-Object { $_.Name -notin $excluded_folders } | 
+Select-Object -ExpandProperty FullName
+foreach ( $path in $path_list) {
+    UtilityProgram\Copy-WithProgress -Source $path -Destination $dest_dir
 }
 
-UtilityProgram\Copy-Files -FilePath $path_array -Destination $dest_dir
-
-Compress-Folder $dest_dir
-
-# Delete oldest file when > 3 month
-Get-ChildItem -Path $backup_dir -Filter "*.zip" | Where-Object { ($_.LastWriteTime -lt (Get-Date).AddMonths(-3)) } | Remove-Item
+if ((UtilityProgram\Compress-Folder $dest_dir) -eq $true) {
+    $zip_file = "$dest_dir.zip"
+    # Copy to box
+    UtilityProgram\Copy-WithProgress -Source $zip_file -Destination $backup_dir
+    # Delete temp file
+    Get-ChildItem -Path $zip_file | Remove-Item
+    # Delete oldest file when > 3 month
+    Get-ChildItem -Path $backup_dir -Filter "*.zip" | Where-Object { ($_.LastWriteTime -lt (Get-Date).AddMonths(-3)) } | Remove-Item
+}
 
 <#
 $dir = [System.Environment]::CurrentDirectory + "\Pad_backup"
 Invoke-ps2exe -version 1.0.0.0 "$dir\backup_pad_library.ps1" "$dir\BackupPADLibrary.exe"
-Out-EncryptedFile "$dir\backup_pad_library.ps1"
+UtilityProgram\Out-EncryptedFile "$dir\backup_pad_library.ps1"
 #>
