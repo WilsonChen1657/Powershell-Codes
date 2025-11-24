@@ -44,20 +44,22 @@ public class MouseMover
 $mousePosition = [MouseTracker]::GetMousePosition()
 #>
 
-# Set the interval for moving the mouse (15 minutes in milliseconds)
-$interval = 14 * 60 * 1000
+# Set the interval for moving the mouse (1 minutes in milliseconds)
+$interval = 1 * 60 * 1000
 
 # Loop to move the mouse every 15 minutes
 while ($true) {
     # Get the mouse position
     $mousePosition = [MouseTracker]::GetMousePosition()
+    $move_x = 1
+    $move_y = 1
     if ( $mousePosition.X -eq 1919 -or $mousePosition.Y -eq 1079) {
-        [MouseMover]::MoveMouse(-1920, -1080)
+        $move_x = -1920
+        $move_y = -1080
     }
-    else {
-        # Move the mouse slightly (you can adjust the values)
-        [MouseMover]::MoveMouse(1, 1)  # Move mouse 1 pixel right and 1 pixel down
-    }
-    
+
+    # Move the mouse slightly (you can adjust the values)
+    [MouseMover]::MoveMouse($move_x, $move_y) # Move the mouse slightly (you can adjust the values)
+    Write-Host "Mouse moved $move_x : $move_y" -ForegroundColor Cyan
     Start-Sleep -Milliseconds $interval  # Wait for 15 minutes
 }

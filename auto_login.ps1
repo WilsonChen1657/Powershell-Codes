@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Drawing
 
 $url = "https://hr.tpi.flextronics.com/wUZLFlow/Default.aspx"
 $user_name = "tpiwiche"
-$password = "w12210210W"
+$password = "w153R34@92bby"
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Auto login HR E-Flow System"
@@ -12,6 +12,29 @@ $form.Size = New-Object System.Drawing.Size @(1040, 710)
 $web_browser = New-Object System.Windows.Forms.WebBrowser
 $web_browser.Dock = 'Fill'
 $web_browser.ScriptErrorsSuppressed = $true
+# 清除 WebBrowser 控制項的瀏覽歷史記錄
+function Clear-WebBrowserHistory {
+    $signature = @"
+    using System;
+    using System.Runtime.InteropServices;
+
+    public class WinInet {
+        [DllImport("wininet.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool DeleteUrlCacheEntry(string lpszUrlName);
+    }
+"@
+    Add-Type -TypeDefinition $signature -Language CSharp
+
+    [WinInet]::DeleteUrlCacheEntry("")
+
+    RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 1
+    RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 2
+    RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 8
+    RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 16
+    RunDll32.exe InetCpl.cpl, ClearMyTracksByProcess 32
+}
+
+Clear-WebBrowserHistory
 $web_browser.Navigate($url)
 
 $login_handler = {
