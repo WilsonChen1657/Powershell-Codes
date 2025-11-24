@@ -6,7 +6,7 @@ UtilityProgram\Test-PathExist $global:w_dir
 $backup_file = "$global:w_dir\footprint_building_aid_skill\Backup\Programs\AllegroSettings.ps1"
 if (!(Test-Path -Path $backup_file -PathType Leaf)) {
     Write-Host "$backup_file not found!!" -ForegroundColor Red
-    Show-PressAnyKey
+    UtilityProgram\Show-PressAnyKey
 }
 else {
     $task_name = "Backup Allegro Settings"
@@ -20,7 +20,7 @@ else {
         }
         else {
             Write-Host "Exit register task schedule" -ForegroundColor Yellow
-            Show-PressAnyKey
+            UtilityProgram\Show-PressAnyKey
         }
     }
 
@@ -31,8 +31,7 @@ else {
         Register-ScheduledTask $task_name -TaskPath $task_path -Action $action -Trigger $trigger -User $user
         #Register-ScheduledTask $task_name -TaskPath $task_path -Action $action -Trigger $trigger
         #>
-
-        #New-ScheduledTaskTrigger 不支援 Monthly，改用 schtasks
+        # New-ScheduledTaskTrigger 不支援 Monthly，改用 schtasks
         # 用 PowerShell 陣列轉字串做出以空白間隔的參數字串，含空白的參數值要加雙引號
         $task_params = @(
             "/Create",
@@ -46,7 +45,7 @@ else {
         schtasks.exe $task_params
 
         Write-Host "Register task schedule Successfully" -ForegroundColor Green
-        Show-PressAnyKey
+        UtilityProgram\Show-PressAnyKey
     }
 }
 
@@ -56,5 +55,5 @@ Invoke-ps2exe $dir\register_backup_task.ps1 $dir\RegisterBackupTask.exe
 
 $ut_dir = [System.Environment]::CurrentDirectory + "\Modules\UtilityProgram.psm1"
 Import-Module $ut_dir
-Out-EncryptedFile "$dir\register_backup_task.ps1"
+UtilityProgram\Out-EncryptedFile "$dir\register_backup_task.ps1"
 #>

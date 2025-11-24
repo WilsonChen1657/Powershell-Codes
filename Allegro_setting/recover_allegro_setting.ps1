@@ -3,14 +3,14 @@ Write-Host "Starting recover Allegro settings..."
 
 #region Check connection
 UtilityProgram\Test-PathExist $global:w_dir
-$box_dir = "C:\Users\$Env:UserName\Box"
-UtilityProgram\Test-PathExist $box_dir
+$user_dir = "C:\Users\$Env:UserName"
+UtilityProgram\Test-PathExist "$user_dir\Box"
 UtilityProgram\Test-PathExist $global:cadance_dir
-UtilityProgram\Test-PathExist "$Env:HOME\pcbenv"
+UtilityProgram\Test-PathExist $Env:HOME
 UtilityProgram\Test-Allegro
 #endregion
 
-$backup_dir = "$box_dir\@Backup_Allegro_setting"
+$backup_dir = "$user_dir\Box\@Backup_Allegro_setting"
 #region Create select menu
 $options = @()
 $cn_folders = Get-ChildItem $backup_dir -Directory
@@ -30,11 +30,11 @@ $cn_menu = UtilityProgram\New-SelectMenu 'Recover from computer backup' $options
 
 if (!(Test-Path $backup_dir -PathType Container)) {
     Write-Host "$backup_dir not found!!" -ForegroundColor Red
-    Show-PressAnyKey
+    UtilityProgram\Show-PressAnyKey
 }
 else {
     $folder = $cn_folders[0]
-    # when there are more than one dir
+    # When there are more than one dir
     if ( $cn_menu.Options.Count -gt 1) {
         do {
             $input_key = $cn_menu.Show()
@@ -50,21 +50,26 @@ else {
     $latest_backup_zip = Get-ChildItem $backup_dir *.zip | Sort-Object LastWriteTime | Select-Object -Last 1
     if (!($latest_backup_zip -is [System.IO.FileSystemInfo])) {
         Write-Host "$backup_dir is empty!!" -ForegroundColor Red
-        Show-PressAnyKey
+        UtilityProgram\Show-PressAnyKey
     }
     else {
-        Expand-Archive -LiteralPath $latest_backup_zip.FullName -DestinationPath $backup_dir -Force
-        $backup_folder = Get-ChildItem $backup_dir -Directory | Sort-Object LastWriteTime | Select-Object -Last 1
-        $backup_files = Get-ChildItem $backup_folder.FullName
+        $temp_dir = "$user_dir\Documents\TempBackup\Backup_Allegro_setting\"
+        # Copy zip file to temp dir
+        UtilityProgram\Copy-WithProgress -Source $latest_backup_zip.FullName -Destination $temp_dir
+        $copy_zip = $temp_dir + $latest_backup_zip.Name
+        # Expand zip file in temp dir
+        UtilityProgram\Expand-ZipFile $copy_zip $temp_dir
+        $backup_folder = $temp_dir + $latest_backup_zip.BaseName
+        $backup_files = Get-ChildItem $backup_folder
         # pcbenv & CIS
-        $folder_list = "pcbenv", "cdssetup"
-        foreach ($folder_name in $folder_list) {
+        $folder_array = "pcbenv", "cdssetup"
+        foreach ($folder_name in $folder_array) {
             $file_info = ($backup_files).Where({ $_.Name -eq $folder_name }) | Select-Object -First 1
             if ($file_info -is [System.IO.DirectoryInfo]) {
-                UtilityProgram\Copy-Reversion -Source $file_info -Destination $Env:HOME -MaxRevs 100
+                UtilityProgram\Copy-Reversion -Source $file_info -Destination $Env:HOME -MaxRevs 10
             }
         }
-        # version files
+        # Version files
         foreach ($ver in $global:ver_array) {
             $ver_folder = ($backup_files).Where({ $_.Name -eq $ver })
             $ver_files = Get-ChildItem $ver_folder.FullName
@@ -89,15 +94,16 @@ else {
                 }
                 if (![string]::IsNullOrEmpty($dest_path)) {
                     $dest_path = "$cadance_dir\$ver\$dest_path"
-                    #$dest_path = "C:\Users\tpiwiche\Desktop\restore_test\$ver\$dest_path"
                     UtilityProgram\Copy-Reversion -Source $ver_file -Destination $dest_path
                 }
             }
         }
-        # delete Expand-Archive folder
-        Get-ChildItem $backup_dir $backup_folder.Name -Directory | Remove-Item -Recurse -Confirm:$false
+        # Remove zip file and temporary extracted backup folder
+        Remove-Item $backup_folder -Recurse -Force
+        Remove-Item $copy_zip -Recurse -Force
+
         Write-Host "Recovery Successfully!! $latest_backup_zip" -ForegroundColor Green
-        Show-PressAnyKey
+        UtilityProgram\Show-PressAnyKey
     }
 }
 
@@ -105,5 +111,5 @@ else {
 $dir = [System.Environment]::CurrentDirectory + "\Allegro_setting"
 Invoke-ps2exe -version 1.0.0.0 "$dir\recover_allegro_setting.ps1" "$dir\RecoverAllegroSetting.exe"
 
-Out-EncryptedFile "$dir\recover_allegro_setting.ps1"
+UtilityProgram\Out-EncryptedFile "$dir\recover_allegro_setting.ps1"
 #>
