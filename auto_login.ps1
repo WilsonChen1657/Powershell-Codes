@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Drawing
 
 $url = "https://hr.tpi.flextronics.com/wUZLFlow/Default.aspx"
 $user_name = "tpiwiche"
-$password = "w153R34@92bby"
+$password = "jeWi1026-bby"
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Auto login HR E-Flow System"
