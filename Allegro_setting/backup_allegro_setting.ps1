@@ -3,27 +3,27 @@ Write-Host "Starting backup Allegro settings..."
 
 #region Check connection
 $user_dir = "C:\Users\$Env:UserName"
-UtilityProgram\Test-PathExist "$user_dir\Box"
+$dest_dir = "$user_dir\OneDrive - Flex"
+UtilityProgram\Test-PathExist $dest_dir
 UtilityProgram\Test-PathExist $global:cadance_dir
 UtilityProgram\Test-PathExist $global:pcbenv_path
 UtilityProgram\Test-Allegro
 #endregion
 
 # backup destination
-$temp_backup_dir = "$user_dir\Documents\TempBackup\Backup_Allegro_setting\"
-$backup_dir = "$user_dir\Box\@Backup_Allegro_setting\$Env:COMPUTERNAME"
-$dest_dir = UtilityProgram\Get-NowFolder $temp_backup_dir
+$backup_dir = "$dest_dir\@Backup_Allegro_setting\$Env:COMPUTERNAME"
+$temp_backup_dir = UtilityProgram\Get-NowFolder "$user_dir\Documents\TempBackup\Backup_Allegro_setting\"
 
 # Computer information
 $computer_info = Get-ComputerInfo
-$computer_info | Out-File -FilePath "$dest_dir\computer_info.txt"
+$computer_info | Out-File -FilePath "$temp_backup_dir\computer_info.txt"
 $ip_config = ipconfig /all
-$ip_config | Out-File -FilePath "$dest_dir\ip_config.txt"
+$ip_config | Out-File -FilePath "$temp_backup_dir\ip_config.txt"
 
 # PCBENV / ENV / SCRIPT / VIEW / allegro.ilinit(user)
 # CIS
 foreach ($source in $global:pcbenv_path, $global:cdssetup_path) {
-    UtilityProgram\Copy-WithProgress -Source $source -Destination $dest_dir
+    UtilityProgram\Copy-WithProgress -Source $source -Destination $temp_backup_dir
 }
 
 foreach ($ver in $global:ver_array) {
@@ -45,7 +45,7 @@ foreach ($ver in $global:ver_array) {
     }
     
     foreach ($path in $path_array) {
-        UtilityProgram\Copy-WithProgress -Source $path -Destination "$dest_dir\$ver"
+        UtilityProgram\Copy-WithProgress -Source $path -Destination "$temp_backup_dir\$ver"
     }
 }
 
@@ -62,12 +62,12 @@ pcb_symbol.men: @version\$global:menus_path
 allegro.cfg: @version\$global:capture_path
 default-mil.dlt: @version\$global:nclegend_path
 "
-$read_me | Out-File "$dest_dir\README.txt"
+$read_me | Out-File "$temp_backup_dir\README.txt"
 #endregion
 
-if ((UtilityProgram\Compress-Folder $dest_dir) -eq $true) {
-    $zip_file = "$dest_dir.zip"
-    # Copy to box
+if ((UtilityProgram\Compress-Folder $temp_backup_dir) -eq $true) {
+    $zip_file = "$temp_backup_dir.zip"
+    # Copy to Cloud drive
     UtilityProgram\Copy-WithProgress -Source $zip_file -Destination $backup_dir
     # Delete temp file
     Get-ChildItem -Path $zip_file | Remove-Item

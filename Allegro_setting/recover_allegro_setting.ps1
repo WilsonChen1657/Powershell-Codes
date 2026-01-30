@@ -4,13 +4,14 @@ Write-Host "Starting recover Allegro settings..."
 #region Check connection
 UtilityProgram\Test-PathExist $global:w_dir
 $user_dir = "C:\Users\$Env:UserName"
-UtilityProgram\Test-PathExist "$user_dir\Box"
+$dest_dir = "$user_dir\OneDrive - Flex"
+UtilityProgram\Test-PathExist $dest_dir
 UtilityProgram\Test-PathExist $global:cadance_dir
 UtilityProgram\Test-PathExist $Env:HOME
 UtilityProgram\Test-Allegro
 #endregion
 
-$backup_dir = "$user_dir\Box\@Backup_Allegro_setting"
+$backup_dir = "$dest_dir\@Backup_Allegro_setting"
 #region Create select menu
 $options = @()
 $cn_folders = Get-ChildItem $backup_dir -Directory

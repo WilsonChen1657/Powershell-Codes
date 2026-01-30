@@ -4,13 +4,13 @@ Write-Host "Hello $Env:UserName"
 #region Check connection
 UtilityProgram\Test-PathExist $global:w_dir
 $user_dir = "C:\Users\$Env:UserName"
-UtilityProgram\Test-PathExist "$user_dir\Box"
+$dest_dir = "$user_dir\OneDrive - Flex"
+UtilityProgram\Test-PathExist $dest_dir
 #endregion
 
 # Backup destination
-$temp_backup_dir = "$user_dir\Documents\TempBackup\Backup_Flex_PAD\"
-$backup_dir = "$user_dir\Box\Backup_Flex_PAD\"
-$dest_dir = UtilityProgram\Get-NowFolder $temp_backup_dir
+$backup_dir = "$dest_dir\Backup\Flex_PAD\"
+$temp_backup_dir = UtilityProgram\Get-NowFolder "$user_dir\Documents\TempBackup\Flex_PAD\"
 
 # 批次複製 & 進度條
 $excluded_folders = @("footprint_building_aid_skill", "Library-Checking")
@@ -18,12 +18,12 @@ $path_list = Get-ChildItem -Path $global:w_dir |
 Where-Object { $_.Name -notin $excluded_folders } | 
 Select-Object -ExpandProperty FullName
 foreach ( $path in $path_list) {
-    UtilityProgram\Copy-WithProgress -Source $path -Destination $dest_dir
+    UtilityProgram\Copy-WithProgress -Source $path -Destination $temp_backup_dir
 }
 
-if ((UtilityProgram\Compress-Folder $dest_dir) -eq $true) {
-    $zip_file = "$dest_dir.zip"
-    # Copy to box
+if ((UtilityProgram\Compress-Folder $temp_backup_dir) -eq $true) {
+    $zip_file = "$temp_backup_dir.zip"
+    # Copy to Cloud drive
     UtilityProgram\Copy-WithProgress -Source $zip_file -Destination $backup_dir
     # Delete temp file
     Get-ChildItem -Path $zip_file | Remove-Item

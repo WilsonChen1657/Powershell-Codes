@@ -1,6 +1,5 @@
 Write-Host "Hello $Env:UserName"
-$w_dir = "W:"
-#$w_dir = "\\tpint60002\ECAD"
+$w_dir = "W:" # "\\tpint60002\ECAD"
 #region 檢查W槽連線
 $test_result = $true
 if (!(Test-Path -Path $w_dir)) {
@@ -8,9 +7,10 @@ if (!(Test-Path -Path $w_dir)) {
     $test_result = $false
 }
 
-$box_dir = "C:\Users\$Env:UserName\Box"
-if (!(Test-Path -Path $box_dir)) {
-    Write-Host "Directory not found! $box_dir" -ForegroundColor Red
+$user_dir = "C:\Users\$Env:UserName"
+$dest_dir = "$user_dir\OneDrive - Flex"
+if (!(Test-Path -Path $dest_dir)) {
+    Write-Host "Directory not found! $dest_dir" -ForegroundColor Red
     $test_result = $false
 }
 
@@ -25,18 +25,23 @@ if (!$test_result) {
 Import-Module "$w_dir\footprint_building_aid_skill\Backup\Modules\UtilityProgram.psm1"
 
 # 要備份文件的路徑
-$path_array = @("$w_dir\footprint_building_aid_skill")
+$source = "$w_dir\footprint_building_aid_skill"
 
 # 備份目標路徑
-$backup_dir = "$box_dir\Backup_skill"
-$dest_dir = UtilityProgram\Get-NowFolder $backup_dir
+$backup_dir = "$dest_dir\Backup\Flex_Skill"
+$temp_backup_dir = UtilityProgram\Get-NowFolder "$user_dir\Documents\TempBackup\Flex_Skill\"
 
-UtilityProgram\Copy-Files -FilePath $path_array -Destination $dest_dir
+UtilityProgram\Copy-WithProgress $source $temp_backup_dir
 
-if ((UtilityProgram\Compress-Folder $dest_dir) -eq $true) {
+if ((UtilityProgram\Compress-Folder $temp_backup_dir) -eq $true) {
+    $zip_file = "$temp_backup_dir.zip"
+    # Copy to Cloud drive
+    UtilityProgram\Copy-WithProgress -Source $zip_file -Destination $backup_dir
+    # Delete temp file
+    Get-ChildItem -Path $zip_file | Remove-Item
     Write-Host "Backup Successfully!!" -ForegroundColor Green
 }
-Show-PressAnyKey
+UtilityProgram\Show-PressAnyKey
 
 <#
 $dir = [System.Environment]::CurrentDirectory
